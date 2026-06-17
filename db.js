@@ -1,26 +1,51 @@
+const { configDotenv } = require('dotenv')
 const mongoose = require('mongoose')
+mongoose.connect(process.env.mongodb)
+configDotenv()
 
 const Schema = mongoose.Schema
 const objectId = mongoose.Schema.ObjectId
+
 const UserSchema = new Schema({
-    email : String,
+    email : {type : String,unique : true},
     name : String,
-    password : String
+    password : String,
+    FirstName : String,
+    LastName : String
+   
 })
 const CoursesSchema=new Schema({
     title : String,
     description : String,
-    userId : objectId
+    userId : objectId,
+    Price : Number,
+    ImageUrl : String,
+    CreatorId : objectId
 })
 const AdminSchema = new Schema({
-    email : String,
-    password : String
+    email : {type : String,unique : true},
+    name : String,
+    password : String,
+    FirstName : String,
+    LastName : String
 })
+const PurchasesSchema = new Schema({
+    userId : objectId,
+    courseId : objectId,
+
+})
+const CourseContent = new Schema({
+    courseId : objectId,
+    content : [objectId],
+    videoUrl : Stringa
+})
+
 
 
 const UserModel = mongoose.model('User',UserSchema)
 const CourseModel = mongoose.model('Courses',CoursesSchema)
 const AdminModel = mongoose.model('Admin',AdminSchema)
+const PurachseModel = mongoose.model('Purchase',PurchasesSchema)
 module.exports ={
-    UserModel,CourseModel,AdminModel
+    UserModel,CourseModel,AdminModel,PurachseModel
 }
