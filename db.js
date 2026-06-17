@@ -1,7 +1,11 @@
-const { configDotenv } = require('dotenv')
 const mongoose = require('mongoose')
-mongoose.connect(process.env.mongodb)
-configDotenv()
+const dotenv = require('dotenv')
+dotenv.config()
+
+
+
+
+
 
 const Schema = mongoose.Schema
 const objectId = mongoose.Schema.ObjectId
@@ -37,7 +41,7 @@ const PurchasesSchema = new Schema({
 const CourseContent = new Schema({
     courseId : objectId,
     content : [objectId],
-    videoUrl : Stringa
+    videoUrl : String
 })
 
 
