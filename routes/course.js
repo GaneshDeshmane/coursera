@@ -4,12 +4,12 @@ const {CourseModel} =require('../db')
 const CourseRouter = Router()
 
 CourseRouter.post('/purchases',function(req,res){
-
+    
 })
 CourseRouter.get('/preview',function(req,res){
+    const course = CourseModel.find({})
     res.json({
-        msg : 'course preview'
-    })
+        course})
 })
 module.exports = {
     CourseRouter : CourseRouter
