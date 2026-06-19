@@ -1,23 +1,17 @@
 const mongoose = require('mongoose')
 const dotenv = require('dotenv')
 dotenv.config()
-
-
-
-
-
-
 const Schema = mongoose.Schema
-const objectId = mongoose.Schema.ObjectId
+const objectId = mongoose.Types.ObjectId
 
 const UserSchema = new Schema({
     email : {type : String,unique : true},
     name : String,
     password : String,
     FirstName : String,
-    LastName : String
-   
+    LastName : String,
 })
+
 const CoursesSchema=new Schema({
     title : String,
     description : String,
