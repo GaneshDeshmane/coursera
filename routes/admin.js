@@ -1,11 +1,17 @@
+const express =require('express')
 const {Router} = require('express')
 const {z}= require('zod')
+
 const jwt = require('jsonwebtoken')
+const dotenv = require('dotenv')
+dotenv.config()
+const JWT_SECRET = process.env.JWT_SECRET
 const {AdminMiddleware} = require('../Middlewares/AdminMiddleware')
 const AdminRouter = Router()
 const {AdminModel, CourseModel} = require('../db')
 
-AdminRouter.post('/signup',function(req,res){
+AdminRouter.use(express.json())//it is important either get invalid cred cause body become undefiend
+AdminRouter.post('/signup',async function(req,res){
     const RequireBody = z.object({
         email : z.string().email(),
         password : z.string().min(6),
@@ -43,7 +49,7 @@ res.json({
 }
 
 })
-AdminRouter.post('/signin',function(req,res){
+AdminRouter.post('/signin',async function(req,res){
      const RequireBody = z.object({
         email : z.string().email(),
         password : z.string().min(6)
@@ -57,7 +63,7 @@ AdminRouter.post('/signin',function(req,res){
     }
     let checkUser;
     try{
-         checkUser =  await UserModel.find({
+         checkUser =  await AdminModel.findOne({
         email : ParseData.data.email,
         password : ParseData.data.password
     })}catch(e){
@@ -79,19 +85,57 @@ AdminRouter.post('/signin',function(req,res){
     })}
 })
 AdminRouter.post('/course',AdminMiddleware,async function(req,res){
-    const Course = req.body.Course;
-    await CourseModel.findOne({
-        Course
+    const title = req.body.title;
+    const description = req.body.description;
+    const Price = req.body.Price;
+    try{
+    await CourseModel.create({
+    title,
+    description,
+    Price
+   })
+   res.json({
+    msg : 'course created successfully'
+   })
+}catch(e){
+    e : e.error
+}
+
+})
+AdminRouter.put('/course',AdminMiddleware,async function(req,res){
+    const title =req.body.title;
+    const description = req.body.description;
+    const Price = req.body.Price;
+    try{
+    await CourseModel.updateOne({title : title , description : description,Price:Price},{
+        title : title,
+        description : description,
+        Price : Price
     })
-})
-AdminRouter.put('/course',AdminMiddleware,function(req,res){
+    res.json({
+        msg : 'course updated successfully'
+    })
+}
+    catch(e){
 
+    }
 })
-AdminRouter.delete('/course',AdminMiddleware,function(req,res){
-
+AdminRouter.delete('/course',AdminMiddleware,async function(req,res){
+    const title = req.body.title;
+    try {
+        await CourseModel.deleteOne({
+        title : title
+    })
+    } catch (error) {
+        
+    }
+    
 })
-AdminRouter.get('/course/bulk',function(req,res){
-
+AdminRouter.get('/course/bulk',AdminMiddleware,async function(req,res){
+    const course = await CourseModel.find({})//it will find course in database
+    res.json({
+        course
+    })
 })
 module.exports = {
     AdminRouter : AdminRouter

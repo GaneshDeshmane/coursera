@@ -7,7 +7,7 @@ const dotenv = require('dotenv')
 
 dotenv.config()
 const JWT_SECRET = process.env.JWT_SECRET
-const {UserModel} = require('../db')
+const {UserModel, CourseModel} = require('../db')
 const authMiddleware = require('../Middlewares/authMiddleware')
 const UserRouter = Router()
 UserRouter.use(express.json())
@@ -63,7 +63,7 @@ UserRouter.post('/signin',async function(req,res){
     }
     let checkUser;
     try{
-         checkUser =  await UserModel.find({
+         checkUser =  await UserModel.findOne({
         email : ParseData.data.email,
         password : ParseData.data.password
     })}catch(e){
@@ -76,17 +76,21 @@ UserRouter.post('/signin',async function(req,res){
             msg : 'invalid credintials'
         })
         return
-    }else{
-    const token = jwt.sign({
+    }
+
+ const token = jwt.sign({
         userId : checkUser._id
     },JWT_SECRET)
     res.json({
         token
-    })}
+    })
 
 })
-UserRouter.get('/purchases',authMiddleware,function(req,res){
-    
+UserRouter.get('/purchases',authMiddleware,async function(req,res){
+    const coursePurchased = await CourseModel.find({})
+    res.json({
+        coursePurchased
+    })
 })
 module.exports = {
     UserRouter : UserRouter
