@@ -2,7 +2,7 @@
 
 function authMiddleware(req,res,next){
     const jwt = require('jsonwebtoken')
-    const JWT_SECRET = process.env.JWT_SECRET
+    const JWT_USER_PASSWORD = process.env.JWT_USER_PASSWORD
     const token = req.body.token;
     if(!token){
         res.json({
@@ -10,7 +10,7 @@ function authMiddleware(req,res,next){
         })
     }return
 
-    const verified = jwt.verify(token,JWT_SECRET)
+    const verified = jwt.verify(token,JWT_USER_PASSWORD)
     if(verified){
         res.json({
             msg : 'user verified'

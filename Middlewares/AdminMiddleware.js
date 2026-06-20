@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken')
 const dotenv = require('dotenv')
 dotenv.config()
 
-const JWT_SECRET = process.env.JWT_SECRET
+const JWT_ADMIN_PASSWORD = process.env.JWT_ADMIN_PASSWORD
 
 function AdminMiddleware(req,res,next){
 
@@ -13,7 +13,7 @@ function AdminMiddleware(req,res,next){
         })
         return
     }
-const verified = jwt.verify(token,JWT_SECRET)
+const verified = jwt.verify(token,JWT_ADMIN_PASSWORD)
 if(verified){
     req.userId = verified.userId
     next()

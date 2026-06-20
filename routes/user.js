@@ -5,7 +5,7 @@ const {z }=require('zod')
 const bcrypt = require('bcrypt')
 const dotenv = require('dotenv')
 dotenv.config()
-const JWT_SECRET = process.env.JWT_SECRET
+const JWT_USER_PASSWORD = process.env.JWT_USER_PASSWORD
 const {UserModel, CourseModel} = require('../db')
 const authMiddleware = require('../Middlewares/authMiddleware')
 const UserRouter = Router()
@@ -87,7 +87,7 @@ UserRouter.post('/signin',async function(req,res){
 
  const token = jwt.sign({
         userId : checkUser._id
-    },JWT_SECRET)
+    },JWT_USER_PASSWORD)
     res.status(200).json({
         token
     })}else{

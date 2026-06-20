@@ -5,7 +5,7 @@ const {z}= require('zod')
 const jwt = require('jsonwebtoken')
 const dotenv = require('dotenv')
 dotenv.config()
-const JWT_SECRET = process.env.JWT_SECRET
+const JWT_ADMIN_PASSWORD = process.env.JWT_ADMIN_PASSWORD
 const {AdminMiddleware} = require('../Middlewares/AdminMiddleware')
 const AdminRouter = Router()
 const {AdminModel, CourseModel} = require('../db')
@@ -79,7 +79,7 @@ AdminRouter.post('/signin',async function(req,res){
     }else{
     const token = jwt.sign({
         userId : checkUser._id
-    },JWT_SECRET)
+    },JWT_ADMIN_PASSWORD)
     res.json({
         token
     })}
