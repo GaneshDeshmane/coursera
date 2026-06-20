@@ -2,9 +2,8 @@ const express = require('express')
 const {Router}=require('express')
 const jwt = require('jsonwebtoken')
 const {z }=require('zod')
-
+const bcrypt = require('bcrypt')
 const dotenv = require('dotenv')
-
 dotenv.config()
 const JWT_SECRET = process.env.JWT_SECRET
 const {UserModel, CourseModel} = require('../db')
@@ -21,29 +20,35 @@ UserRouter.post('/signup',async function(req,res){
 })
  const ParseData = RequireBody.safeParse(req.body)
  if(!ParseData.success){
-    res.json({
+    res.status(402).json({
         msg : 'invalid credintials'
     })
     return
  }
+ try{
    const Check =  await UserModel.findOne({
         email : ParseData.data.email
     })
     if(Check){
-        res.json({
+        res.status(402).json({
             msg : 'user already exist'
         })
         return
   
+    }}catch(e){
+        res.status(402).json({
+            e : error.message
+        })
     }
+    const HashedPassword = await bcrypt.hash(ParseData.data.password,5)
 try{
 await UserModel.create({
     email : ParseData.data.email,
-    password : ParseData.data.password,
+    password : HashedPassword,
     FirstName : ParseData.data.FirstName,
     LastName : ParseData.data.LastName
 })
-res.json({
+res.status(201).json({
     msg : 'user signed up successfully'
 })}catch(e){
     e : e.error
@@ -56,7 +61,7 @@ UserRouter.post('/signin',async function(req,res){
     })
     const ParseData = RequireBody.safeParse(req.body)
     if(!ParseData.success){
-        res.json({
+        res.status(402).json({
             msg : 'invalid cred'
         })
         return
@@ -65,25 +70,31 @@ UserRouter.post('/signin',async function(req,res){
     try{
          checkUser =  await UserModel.findOne({
         email : ParseData.data.email,
-        password : ParseData.data.password
+        
     })}catch(e){
         res.json({
             error : e.error
         })
     }
     if(!checkUser){
-        res.json({
+        res.status(402).json({
             msg : 'invalid credintials'
         })
         return
     }
+    const PasswordMached = await bcrypt.compare(ParseData.data.password,checkUser.password);
+    if(PasswordMached){
 
  const token = jwt.sign({
         userId : checkUser._id
     },JWT_SECRET)
-    res.json({
+    res.status(200).json({
         token
-    })
+    })}else{
+        res.status(402).json({
+            msg : 'invalid cred'
+        })
+    }
 
 })
 UserRouter.get('/purchases',authMiddleware,async function(req,res){
