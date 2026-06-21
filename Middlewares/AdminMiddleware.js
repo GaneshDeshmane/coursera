@@ -15,7 +15,7 @@ function AdminMiddleware(req,res,next){
     }
 const verified = jwt.verify(token,JWT_ADMIN_PASSWORD)
 if(verified){
-    req.userId = verified.userId
+    req.adminId = verified.id
     next()
 }else({
     msg : 'admin not found'

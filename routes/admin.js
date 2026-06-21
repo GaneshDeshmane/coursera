@@ -61,9 +61,9 @@ AdminRouter.post('/signin',async function(req,res){
         })
         return
     }
-    let checkUser;
+    let admin;
     try{
-         checkUser =  await AdminModel.findOne({
+         admin =  await AdminModel.findOne({
         email : ParseData.data.email,
         password : ParseData.data.password
     })}catch(e){
@@ -71,15 +71,15 @@ AdminRouter.post('/signin',async function(req,res){
             error : e.error
         })
     }
-    if(!checkUser){
+    if(!admin){
         res.json({
             msg : 'invalid credintials'
         })
         return
     }else{
     const token = jwt.sign({
-        userId : checkUser._id
-    },JWT_ADMIN_PASSWORD)
+        id : admin._id
+    },JWT_ADMIN_PASSWORD )
     res.json({
         token
     })}
@@ -88,14 +88,19 @@ AdminRouter.post('/course',AdminMiddleware,async function(req,res){
     const title = req.body.title;
     const description = req.body.description;
     const Price = req.body.Price;
+    const imageUrl = req.body.imageUrl
+    const adminId = req.adminId
     try{
-    await CourseModel.create({
+    const course = await CourseModel.create({
     title,
     description,
-    Price
+    Price,
+    ImageUrl,
+    CreatorId : adminId
    })
    res.json({
-    msg : 'course created successfully'
+    msg : 'course created successfully',
+    courseId :  course._id
    })
 }catch(e){
     e : e.error
