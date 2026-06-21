@@ -95,7 +95,7 @@ AdminRouter.post('/course',AdminMiddleware,async function(req,res){
     title,
     description,
     Price,
-    ImageUrl,
+    imageUrl,
     CreatorId : adminId
    })
    res.json({
@@ -103,7 +103,10 @@ AdminRouter.post('/course',AdminMiddleware,async function(req,res){
     courseId :  course._id
    })
 }catch(e){
-    e : e.error
+    console.log(e)
+    res.json({
+        msg : "invalid error"
+    })
 }
 
 })
@@ -111,11 +114,19 @@ AdminRouter.put('/course',AdminMiddleware,async function(req,res){
     const title =req.body.title;
     const description = req.body.description;
     const Price = req.body.Price;
+    const ImageUrl =req.body.ImageUrl
+    const courseId = req.body.courseId
+    const adminId = req.adminId
     try{
-    await CourseModel.updateOne({title : title , description : description,Price:Price},{
+    const course = await CourseModel.updateOne({
+        _id : courseId,
+        CreatorId  : adminId//when condition match where creatorId is same of the creator who have the same courseId 
+        //then it will update 
+    },{
         title : title,
         description : description,
-        Price : Price
+        Price : Price,
+        ImageUrl:ImageUrl
     })
     res.json({
         msg : 'course updated successfully'
@@ -137,9 +148,13 @@ AdminRouter.delete('/course',AdminMiddleware,async function(req,res){
     
 })
 AdminRouter.get('/course/bulk',AdminMiddleware,async function(req,res){
-    const course = await CourseModel.find({})//it will find course in database
+    const adminId = req.adminId
+   const courses = await CourseModel.find({
+        CreatorId  : adminId
+    })
     res.json({
-        course
+        
+        courses
     })
 })
 module.exports = {

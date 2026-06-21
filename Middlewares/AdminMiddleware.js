@@ -6,20 +6,24 @@ const JWT_ADMIN_PASSWORD = process.env.JWT_ADMIN_PASSWORD
 
 function AdminMiddleware(req,res,next){
 
-    const token = req.body.token;
+    const token = req.headers.token;
     if(!token){
         res.json({
            msg :  'token not found'
         })
         return
     }
+try{
 const verified = jwt.verify(token,JWT_ADMIN_PASSWORD)
-if(verified){
+
     req.adminId = verified.id
     next()
-}else({
-    msg : 'admin not found'
-})
+}catch(e){
+    res.json({
+        msg : 'admin not found'
+    })
+}
+
 }
 
 module.exports = {
