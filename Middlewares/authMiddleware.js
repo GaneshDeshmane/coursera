@@ -1,27 +1,32 @@
 
 
 function authMiddleware(req,res,next){
+ 
     const jwt = require('jsonwebtoken')
     const JWT_USER_PASSWORD = process.env.JWT_USER_PASSWORD
-    const token = req.body.token;
+
+    const token = req.headers.token
     if(!token){
         res.json({
             msg : 'token required'
         })
-    }return
-
-    const verified = jwt.verify(token,JWT_USER_PASSWORD)
-    if(verified){
-        res.json({
-            msg : 'user verified'
-        })
-        next()
-        req.userId = verified.userId
-    }else{
-        res.json({
-            msg : 'user not found'
-        })
+        return
     }
+try{
+    const verified = jwt.verify(token,JWT_USER_PASSWORD)
+          req.userId = verified.userId
+        next()
+      
+        
+
+        
+      
+}catch(e){
+    res.status(500).json({
+        msg : 'internal error'
+    })
+}
+    
 }
 
 module.exports = authMiddleware

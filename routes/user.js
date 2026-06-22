@@ -6,7 +6,7 @@ const bcrypt = require('bcrypt')
 const dotenv = require('dotenv')
 dotenv.config()
 const JWT_USER_PASSWORD = process.env.JWT_USER_PASSWORD
-const {UserModel, CourseModel} = require('../db')
+const {UserModel, CourseModel, PurachseModel} = require('../db')
 const authMiddleware = require('../Middlewares/authMiddleware')
 const UserRouter = Router()
 UserRouter.use(express.json())
@@ -98,7 +98,8 @@ UserRouter.post('/signin',async function(req,res){
 
 })
 UserRouter.get('/purchases',authMiddleware,async function(req,res){
-    const coursePurchased = await CourseModel.find({})
+    const userId =req.userId
+    const coursePurchased = await PurachseModel.find({})
     res.json({
         coursePurchased
     })
