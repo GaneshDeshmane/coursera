@@ -1,7 +1,7 @@
-const express =require('express')
+const express = require('express')
 const {Router} = require('express')
-const {z}= require('zod')
-
+const {z} = require('zod')
+const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const dotenv = require('dotenv')
 dotenv.config()
@@ -10,153 +10,196 @@ const {AdminMiddleware} = require('../Middlewares/AdminMiddleware')
 const AdminRouter = Router()
 const {AdminModel, CourseModel} = require('../db')
 
-AdminRouter.use(express.json())//it is important either get invalid cred cause body become undefiend
-AdminRouter.post('/signup',async function(req,res){
-    const RequireBody = z.object({
-        email : z.string().email(),
-        password : z.string().min(6),
-        FirstName :z.string().min(3),
-        LastName : z.string()
-    })
-    const ParseData = RequireBody.safeParse(req.body)
-    if(!ParseData.success){
-        res.json({
-            msg : "invalid cred"
-        })
-        return
-    }
-    const check = await AdminModel.findOne({
-        email : ParseData.data.email,
-    })
-    if(check){
-        res.json({
-            msg : 'user already exist'
-        })
-        return
-    }
-try{
-await AdminModel.create({
-    email : ParseData.data.email,
-    password : ParseData.data.password,
-    FirstName : ParseData.data.FirstName,
-    LastName : ParseData.data.LastName
-})
-res.json({
-    msg : 'admin signedup successfully'
-})
-}catch(e){
-    e : e.error
-}
+const SALT_ROUNDS = 10;
 
-})
-AdminRouter.post('/signin',async function(req,res){
-     const RequireBody = z.object({
-        email : z.string().email(),
-        password : z.string().min(6)
+AdminRouter.use(express.json())
+
+AdminRouter.post('/signup', async function(req, res) {
+    const RequireBody = z.object({
+        email: z.string().email(),
+        password: z.string().min(6),
+        FirstName: z.string().min(3),
+        LastName: z.string()
     })
     const ParseData = RequireBody.safeParse(req.body)
-    if(!ParseData.success){
-        res.json({
-            msg : 'invalid cred'
+    if (!ParseData.success) {
+        return res.status(402).json({
+            msg: "invalid cred"
         })
-        return
     }
+
+    try {
+        const check = await AdminModel.findOne({
+            email: ParseData.data.email,
+        })
+        if (check) {
+            return res.status(402).json({
+                msg: 'admin already exists'
+            })
+        }
+    } catch (e) {
+        return res.status(500).json({
+            error: e.message
+        })
+    }
+
+    const HashedPassword = await bcrypt.hash(ParseData.data.password, SALT_ROUNDS)
+
+    try {
+        await AdminModel.create({
+            email: ParseData.data.email,
+            password: HashedPassword,
+            FirstName: ParseData.data.FirstName,
+            LastName: ParseData.data.LastName
+        })
+        res.status(201).json({
+            msg: 'admin signed up successfully'
+        })
+    } catch (e) {
+        res.status(500).json({
+            error: e.message
+        })
+    }
+})
+
+AdminRouter.post('/signin', async function(req, res) {
+    const RequireBody = z.object({
+        email: z.string().email(),
+        password: z.string().min(6)
+    })
+    const ParseData = RequireBody.safeParse(req.body)
+    if (!ParseData.success) {
+        return res.status(402).json({
+            msg: 'invalid cred'
+        })
+    }
+
     let admin;
-    try{
-         admin =  await AdminModel.findOne({
-        email : ParseData.data.email,
-        password : ParseData.data.password
-    })}catch(e){
-        res.json({
-            error : e.error
+    try {
+        admin = await AdminModel.findOne({
+            email: ParseData.data.email
+        })
+    } catch (e) {
+        return res.status(500).json({
+            error: e.message
         })
     }
-    if(!admin){
-        res.json({
-            msg : 'invalid credintials'
+
+    if (!admin) {
+        return res.status(402).json({
+            msg: 'invalid credentials'
         })
-        return
-    }else{
+    }
+
+    const PasswordMatched = await bcrypt.compare(ParseData.data.password, admin.password);
+    if (!PasswordMatched) {
+        return res.status(402).json({
+            msg: 'invalid credentials'
+        })
+    }
+
     const token = jwt.sign({
-        id : admin._id
-    },JWT_ADMIN_PASSWORD )
+        id: admin._id
+    }, JWT_ADMIN_PASSWORD)
     res.json({
         token
-    })}
+    })
 })
-AdminRouter.post('/course',AdminMiddleware,async function(req,res){
+
+AdminRouter.post('/course', AdminMiddleware, async function(req, res) {
     const title = req.body.title;
     const description = req.body.description;
     const Price = req.body.Price;
     const imageUrl = req.body.imageUrl
     const adminId = req.adminId
-    try{
-    const course = await CourseModel.create({
-    title,
-    description,
-    Price,
-    imageUrl,
-    CreatorId : adminId
-   })
-   res.json({
-    msg : 'course created successfully',
-    courseId :  course._id
-   })
-}catch(e){
-    console.log(e)
-    res.json({
-        msg : "invalid error"
-    })
-}
-
+    try {
+        const course = await CourseModel.create({
+            title,
+            description,
+            Price,
+            imageUrl,
+            CreatorId: adminId
+        })
+        res.json({
+            msg: 'course created successfully',
+            courseId: course._id
+        })
+    } catch (e) {
+        console.log(e)
+        res.status(500).json({
+            msg: "error creating course"
+        })
+    }
 })
-AdminRouter.put('/course',AdminMiddleware,async function(req,res){
-    const title =req.body.title;
+
+AdminRouter.put('/course', AdminMiddleware, async function(req, res) {
+    const title = req.body.title;
     const description = req.body.description;
     const Price = req.body.Price;
-    const ImageUrl =req.body.ImageUrl
+    const ImageUrl = req.body.ImageUrl
     const courseId = req.body.courseId
     const adminId = req.adminId
-    try{
-    const course = await CourseModel.updateOne({
-        _id : courseId,
-        CreatorId  : adminId//when condition match where creatorId is same of the creator who have the same courseId 
-        //then it will update 
-    },{
-        title : title,
-        description : description,
-        Price : Price,
-        ImageUrl:ImageUrl
-    })
-    res.json({
-        msg : 'course updated successfully'
-    })
-}
-    catch(e){
-
-    }
-})
-AdminRouter.delete('/course',AdminMiddleware,async function(req,res){
-    const title = req.body.title;
     try {
-        await CourseModel.deleteOne({
-        title : title
-    })
-    } catch (error) {
-        
+        const course = await CourseModel.updateOne({
+            _id: courseId,
+            CreatorId: adminId
+            // when condition matches where CreatorId is the same as the admin who owns this courseId, it updates
+        }, {
+            title: title,
+            description: description,
+            Price: Price,
+            ImageUrl: ImageUrl
+        })
+        if (course.matchedCount === 0) {
+            return res.status(404).json({
+                msg: 'course not found'
+            })
+        }
+        res.json({
+            msg: 'course updated successfully'
+        })
+    } catch (e) {
+        console.log(e)
+        res.status(500).json({
+            msg: 'error updating course'
+        })
     }
-    
 })
-AdminRouter.get('/course/bulk',AdminMiddleware,async function(req,res){
+
+AdminRouter.delete('/course', AdminMiddleware, async function(req, res) {
+    const title = req.body.title;
     const adminId = req.adminId
-   const courses = await CourseModel.find({
-        CreatorId  : adminId
+    try {
+        const result = await CourseModel.deleteOne({
+            title: title,
+            CreatorId: adminId
+        })
+        if (result.deletedCount === 0) {
+            return res.status(404).json({
+                msg: 'course not found'
+            })
+        }
+        res.json({
+            msg: 'course deleted successfully'
+        })
+    } catch (e) {
+        console.log(e)
+        res.status(500).json({
+            msg: 'error deleting course'
+        })
+    }
+})
+
+AdminRouter.get('/course/bulk', AdminMiddleware, async function(req, res) {
+    const adminId = req.adminId
+    const courses = await CourseModel.find({
+        CreatorId: adminId
     })
     res.json({
-        
         courses
     })
 })
+
 module.exports = {
-    AdminRouter : AdminRouter
+    AdminRouter: AdminRouter
 }

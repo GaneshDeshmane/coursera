@@ -4,9 +4,10 @@ const {CourseRouter} = require('./routes/course')
 const {AdminRouter} = require('./routes/admin')
 const dotenv = require("dotenv");
 dotenv.config();
+const cors = require('cors')
 const mongoose = require('mongoose')
 const app = express()
-
+    app.use(cors())
     app.use('/user',UserRouter)
     app.use('/course',CourseRouter)
     app.use('/admin',AdminRouter)
