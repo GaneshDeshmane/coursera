@@ -192,12 +192,19 @@ AdminRouter.delete('/course', AdminMiddleware, async function(req, res) {
 
 AdminRouter.get('/course/bulk', AdminMiddleware, async function(req, res) {
     const adminId = req.adminId
-    const courses = await CourseModel.find({
-        CreatorId: adminId
-    })
-    res.json({
-        courses
-    })
+    try {
+        const courses = await CourseModel.find({
+            CreatorId: adminId
+        })
+        res.json({
+            courses
+        })
+    } catch (e) {
+        console.log(e)
+        res.status(500).json({
+            msg: 'error fetching bulk courses'
+        })
+    }
 })
 
 module.exports = {
